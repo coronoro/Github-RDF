@@ -1,0 +1,41 @@
+buildscript {
+    ext.kotlin_version = '1.2.41'
+
+    repositories {
+        mavenCentral()
+    }
+
+    dependencies {
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+    }
+}
+
+apply plugin: 'kotlin'
+apply plugin: 'idea'
+
+repositories {
+    mavenCentral()
+}
+
+
+dependencies {
+    compile 'org.kohsuke:github-api:1.93'
+    compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
+    compile group: 'org.apache.jena', name: 'jena-core', version: '3.7.0'
+    compile group: 'org.apache.jena', name: 'jena-arq', version: '3.7.0'
+    testCompile group: 'org.apache.jena', name: 'jena-fuseki-embedded', version: '3.7.0'
+
+}
+
+sourceCompatibility = '1.8'
+targetCompatibility = '1.8'
+compileKotlin {
+    kotlinOptions {
+        jvmTarget = "1.8"
+    }
+}
+compileTestKotlin {
+    kotlinOptions {
+        jvmTarget = "1.8"
+    }
+}
