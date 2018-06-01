@@ -23,7 +23,7 @@ dependencies {
     compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
     compile group: 'org.apache.jena', name: 'jena-core', version: '3.7.0'
     compile group: 'org.apache.jena', name: 'jena-arq', version: '3.7.0'
-    testCompile group: 'org.apache.jena', name: 'jena-fuseki-embedded', version: '3.7.0'
+    compile group: 'org.apache.jena', name: 'jena-fuseki-embedded', version: '3.7.0'
 
 }
 
