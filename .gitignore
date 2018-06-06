@@ -1,4 +1,4 @@
-./idea/
-./idea/*
-./build
-./out
+.idea/**
+*.iml
+build
+out

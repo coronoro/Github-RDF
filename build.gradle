@@ -24,6 +24,7 @@ dependencies {
     compile group: 'org.apache.jena', name: 'jena-core', version: '3.7.0'
     compile group: 'org.apache.jena', name: 'jena-arq', version: '3.7.0'
     compile group: 'org.apache.jena', name: 'jena-fuseki-embedded', version: '3.7.0'
+    compile group: 'org.apache.jena', name: 'jena-querybuilder', version: '3.7.0'
 
 }
 

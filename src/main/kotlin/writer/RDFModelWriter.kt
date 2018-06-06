@@ -9,20 +9,30 @@ import org.kohsuke.github.GHCommit
 import org.kohsuke.github.GHRepository
 import org.kohsuke.github.GHUser
 import java.io.OutputStream
+import java.net.URI
 
 class RDFModelWriter(val stream:OutputStream, val commitLimit: Int = 10){
 
     val model = ModelFactory.createDefaultModel()
 
+    init{
+        model.setNsPrefix("repo", "https://api.github.com/repos/*")
+        model.setNsPrefix("user", "https://api.github.com/users/")
+        model.setNsPrefix("rdf", "http://www.w3.org/1999/02/22-rdf-syntax-ns#")
+        model.setNsPrefix("gh", GH.uri)
+    }
+
     fun add(repo: GHRepository){
         val resource = model.createResource(repo.url.toString())
-        resource.addProperty(VCARD.NAME, repo.name)
+        resource.addProperty(GH.NAME, repo.name)
         val languageBag = model.createBag()
         for (lang in repo.listLanguages()){
             languageBag.add(lang)
         }
         resource.addProperty(GH.LANGUAGES, languageBag)
-        resource.addProperty(GH.CREATED, repo.createdAt.toString())
+        if (repo.createdAt != null){
+            resource.addProperty(GH.CREATED, repo.createdAt.toString())
+        }
 
         val commitBag = model.createBag()
         resource.addProperty(GH.COMMITS,commitBag)
@@ -40,6 +50,7 @@ class RDFModelWriter(val stream:OutputStream, val commitLimit: Int = 10){
 
     }
 
+
     fun add(commit:GHCommit, repo:GHRepository): Resource {
         val resource = model.createResource(repo.url.toString()+"/"+commit.hashCode())
 
@@ -54,9 +65,9 @@ class RDFModelWriter(val stream:OutputStream, val commitLimit: Int = 10){
 
     fun add(user:GHUser):Resource{
         val userURI = user.url.toString()
-        var resource = model.getResource(userURI) ?: model.createResource()
 
-        resource.addProperty(VCARD.NAME, user.name)
+        var resource = model.getResource(userURI) ?: model.createResource()
+        resource.addProperty(GH.NAME, user.name)
         return resource
     }
 
@@ -65,6 +76,7 @@ class RDFModelWriter(val stream:OutputStream, val commitLimit: Int = 10){
 //        model.write(stream ,Lang.TTL.name)
         //model.write(stream ,"RDF/XML-ABBREV")
         model.write(stream , Lang.N3.name)
+        //model.write(stream , Lang.NTRIPLES.name)
     }
 
 
