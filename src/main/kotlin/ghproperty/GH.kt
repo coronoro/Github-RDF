@@ -5,17 +5,17 @@ import org.apache.jena.rdf.model.Property
 
 object GH{
 
-    val uri = "https://github.com/rdf/#"
-    private val m = ModelFactory.createDefaultModel()
+    private val m = ModelFactory.createOntologyModel()
 
 
 
-    public val LANGUAGES = m.createProperty(uri , "LANGUAGES")
-    public val COMMITS = m.createProperty(uri , "COMMITS")
-    public val CREATED = m.createProperty(uri , "CREATED")
-    public val COMMIT_DATE = m.createProperty(uri , "COMMITDATE")
-    public val AUTHOR = m.createProperty(uri , "AUTHOR")
-    public val NAME = m.createProperty(uri , "NAME")
+    public val LANGUAGES = m.createProperty(Namespaces.GHRDF.uri , "LANGUAGES")
+    public val COMMITS = m.createProperty(Namespaces.GHRDF.uri , "COMMITS")
+    public val CREATED = m.createProperty(Namespaces.GHRDF.uri , "CREATED")
+    public val COMMIT_DATE = m.createProperty(Namespaces.GHRDF.uri , "COMMITDATE")
+    public val AUTHOR = m.createProperty(Namespaces.GHRDF.uri , "AUTHOR")
+    public val NAME = m.createProperty(Namespaces.GHRDF.uri , "NAME")
+
 
 
 

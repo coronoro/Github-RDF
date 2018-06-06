@@ -1,4 +1,5 @@
 import data.LoadProjects
+import ghproperty.GH
 import org.apache.jena.arq.querybuilder.SelectBuilder
 import org.apache.jena.fuseki.embedded.FusekiServer
 import org.apache.jena.query.DatasetFactory
@@ -18,7 +19,7 @@ import org.apache.jena.query.QueryFactory
 
 
 
-val outPath = "C:\\Users\\Coronoro\\Desktop\\gh.ttl"
+val outPath = "C:\\Users\\Tim Streicher\\gh.ttl"
 
 fun main(args : Array<String>) {
     val file = File(outPath)
@@ -29,14 +30,10 @@ fun main(args : Array<String>) {
 
     LoadProjects.loadProjects(writer, 10)
 
-    val sb = SelectBuilder()
-            .addVar("*")
-            .addWhere("?s", "?p", "?o")
-
-    val q = sb.build()
-    //writer.model.query(q.)
 
 
+
+    /*
     QueryExecutionFactory.create(q, writer.model).use({ qexec ->
         val results = qexec.execSelect()
         while (results.hasNext()) {
@@ -45,10 +42,11 @@ fun main(args : Array<String>) {
             val r = soln.getResource("VarR") // Get a result variable - must be a resource
             val l = soln.getLiteral("VarL")   // Get a result variable - must be a literal
         }
-    })
+    })*/
 
 
     val ds = DatasetFactory.createTxnMem()
+    DatasetFactory.assemble(writer.model)
     ds.addNamedModel("http://github.com/rdf", writer.model )
     val server = FusekiServer.create()
             .add("/ds", ds)

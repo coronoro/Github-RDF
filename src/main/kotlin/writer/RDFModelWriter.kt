@@ -1,6 +1,8 @@
 package writer
 
 import ghproperty.GH
+import ghproperty.Namespaces
+import ghproperty.OntologyClasses
 import org.apache.jena.rdf.model.ModelFactory
 import org.apache.jena.rdf.model.Resource
 import org.apache.jena.riot.Lang
@@ -13,14 +15,29 @@ import java.net.URI
 
 class RDFModelWriter(val stream:OutputStream, val commitLimit: Int = 10){
 
-    val model = ModelFactory.createDefaultModel()
+    val model = ModelFactory.createOntologyModel()
 
     init{
-        model.setNsPrefix("repo", "https://api.github.com/repos/*")
-        model.setNsPrefix("user", "https://api.github.com/users/")
+        model.setNsPrefix("user", Namespaces.USER.uri)
         model.setNsPrefix("rdf", "http://www.w3.org/1999/02/22-rdf-syntax-ns#")
-        model.setNsPrefix("gh", GH.uri)
+        model.setNsPrefix("gh", Namespaces.GHRDF.uri)
+
+        createOntoClasses()
     }
+
+
+    private fun createOntoClasses(){
+        enumValues<OntologyClasses>().forEach {
+            val clazz = model.createClass(it.uri)
+        }
+    }
+
+    private fun createPredicates(){
+        enumValues<OntologyClasses>().forEach {
+            val clazz = model.createClass(it.uri)
+        }
+    }
+
 
     fun add(repo: GHRepository){
         val resource = model.createResource(repo.url.toString())
@@ -73,13 +90,11 @@ class RDFModelWriter(val stream:OutputStream, val commitLimit: Int = 10){
 
 
     fun write(){
-//        model.write(stream ,Lang.TTL.name)
+        model.write(stream ,Lang.TTL.name)
         //model.write(stream ,"RDF/XML-ABBREV")
-        model.write(stream , Lang.N3.name)
+        //model.write(stream , Lang.N3.name)
         //model.write(stream , Lang.NTRIPLES.name)
     }
 
-
-//    RDFDataMgr.write(System.out, model, Lang.TTL);
 
 }
