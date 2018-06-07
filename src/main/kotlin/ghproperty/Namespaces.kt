@@ -2,9 +2,12 @@ package ghproperty
 
 enum class Namespaces(val uri:String) {
 
-    REPO("https://api.github.com/repo/"),
+
     USER("https://api.github.com/users/"),
-    GHRDF("https://github.com/rdf/#")
+    GH("https://github.com/rdf/#"),
+    GHOWL("https://github.com/rdf/"),
+    RDF("http://www.w3.org/1999/02/22-rdf-syntax-ns#"),
+    PROVO("https://www.w3.org/ns/prov-o/")
 
 
 

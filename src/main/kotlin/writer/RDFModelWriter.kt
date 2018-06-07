@@ -6,25 +6,31 @@ import ghproperty.OntologyClasses
 import org.apache.jena.rdf.model.ModelFactory
 import org.apache.jena.rdf.model.Resource
 import org.apache.jena.riot.Lang
-import org.apache.jena.vocabulary.VCARD
 import org.kohsuke.github.GHCommit
 import org.kohsuke.github.GHRepository
 import org.kohsuke.github.GHUser
+import vocabulary.Provenance
 import java.io.OutputStream
-import java.net.URI
+
 
 class RDFModelWriter(val stream:OutputStream, val commitLimit: Int = 10){
 
     val model = ModelFactory.createOntologyModel()
 
     init{
-        model.setNsPrefix("user", Namespaces.USER.uri)
-        model.setNsPrefix("rdf", "http://www.w3.org/1999/02/22-rdf-syntax-ns#")
-        model.setNsPrefix("gh", Namespaces.GHRDF.uri)
+
+        model.addLoadedImport("https://www.w3.org/ns/prov-o")
+        setPrefixes()
 
         createOntoClasses()
     }
 
+
+    private fun setPrefixes(){
+        enumValues<Namespaces>().forEach {
+            model.setNsPrefix(it.name.toLowerCase(), it.uri)
+        }
+    }
 
     private fun createOntoClasses(){
         enumValues<OntologyClasses>().forEach {
@@ -32,23 +38,24 @@ class RDFModelWriter(val stream:OutputStream, val commitLimit: Int = 10){
         }
     }
 
-    private fun createPredicates(){
+    private fun createOntoPredicates(){
         enumValues<OntologyClasses>().forEach {
             val clazz = model.createClass(it.uri)
+
         }
     }
 
 
     fun add(repo: GHRepository){
-        val resource = model.createResource(repo.url.toString())
+        val resource = model.createIndividual(repo.htmlUrl.toString(), Provenance.ENTITY)
         resource.addProperty(GH.NAME, repo.name)
         val languageBag = model.createBag()
         for (lang in repo.listLanguages()){
-            languageBag.add(lang)
+            languageBag.add(lang.key)
         }
         resource.addProperty(GH.LANGUAGES, languageBag)
         if (repo.createdAt != null){
-            resource.addProperty(GH.CREATED, repo.createdAt.toString())
+            resource.addProperty(Provenance.GENERATED_AT_TIME, repo.createdAt.toString())
         }
 
         val commitBag = model.createBag()
@@ -69,12 +76,15 @@ class RDFModelWriter(val stream:OutputStream, val commitLimit: Int = 10){
 
 
     fun add(commit:GHCommit, repo:GHRepository): Resource {
-        val resource = model.createResource(repo.url.toString()+"/"+commit.hashCode())
 
-        resource.addProperty(GH.COMMIT_DATE , commit.commitDate.toString())
+        val resource = model.createResource(repo.url.toString()+"/"+commit.shA1, Provenance.ACTIVITY)
+        resource.addProperty(GH.COMMIT_PARENT, repo.url.toString()+"/"+commit.parentSHA1s)
+        //TODO message
+        //resource.addProperty(GH.COMMIT_MESSAGE, commit.)
+        resource.addProperty(Provenance.STARTED_AT_TIME , commit.commitDate.toString())
         if (commit.author != null){
             val author = this.add(commit.author)
-            resource.addProperty(GH.AUTHOR, author)
+            resource.addProperty(Provenance.WAS_ASSOCIATED_WITH, author)
         }
         return resource
     }
@@ -83,8 +93,12 @@ class RDFModelWriter(val stream:OutputStream, val commitLimit: Int = 10){
     fun add(user:GHUser):Resource{
         val userURI = user.url.toString()
 
-        var resource = model.getResource(userURI) ?: model.createResource()
+        var resource = model.getIndividual(userURI) ?: model.createIndividual(userURI,Provenance.AGENT)
         resource.addProperty(GH.NAME, user.name)
+        if (user.email != null){
+            resource.addProperty(GH.MAIL, user.email)
+        }
+
         return resource
     }
 

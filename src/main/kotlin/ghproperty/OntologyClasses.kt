@@ -2,8 +2,8 @@ package ghproperty
 
 enum class OntologyClasses(val uri:String){
 
-    REPO("https://api.github.com/repo/"),
-    COMMIT(""),
-    USER("")
+    REPO("https://github.com/rdf/repo"),
+    COMMIT("https://github.com/rdf/commit"),
+    USER("https://github.com/rdf/user")
 
 }

@@ -9,12 +9,15 @@ object GH{
 
 
 
-    public val LANGUAGES = m.createProperty(Namespaces.GHRDF.uri , "LANGUAGES")
-    public val COMMITS = m.createProperty(Namespaces.GHRDF.uri , "COMMITS")
-    public val CREATED = m.createProperty(Namespaces.GHRDF.uri , "CREATED")
-    public val COMMIT_DATE = m.createProperty(Namespaces.GHRDF.uri , "COMMITDATE")
-    public val AUTHOR = m.createProperty(Namespaces.GHRDF.uri , "AUTHOR")
-    public val NAME = m.createProperty(Namespaces.GHRDF.uri , "NAME")
+    public val LANGUAGES = m.createProperty(Namespaces.GH.uri , "LANGUAGES")
+    public val COMMITS = m.createProperty(Namespaces.GH.uri , "COMMITS")
+    public val CREATED = m.createProperty(Namespaces.GH.uri , "CREATED")
+    public val COMMIT_DATE = m.createProperty(Namespaces.GH.uri , "COMMITDATE")
+    public val COMMIT_PARENT = m.createProperty(Namespaces.GH.uri , "COMMITPARENT")
+    public val COMMIT_MESSAGE = m.createProperty(Namespaces.GH.uri , "COMMITMESSAGE")
+    public val AUTHOR = m.createProperty(Namespaces.GH.uri , "AUTHOR")
+    public val NAME = m.createProperty(Namespaces.GH.uri , "NAME")
+    public val MAIL = m.createProperty(Namespaces.GH.uri , "MAIL")
 
 
 
