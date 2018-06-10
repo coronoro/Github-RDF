@@ -1,9 +1,12 @@
 package ghproperty
 
-enum class OntologyClasses(val uri:String){
+import org.apache.jena.ontology.OntClass
+import vocabulary.Provenance
 
-    REPO("https://github.com/rdf/repo"),
-    COMMIT("https://github.com/rdf/commit"),
-    USER("https://github.com/rdf/user")
+enum class OntologyClasses(val uri:String, val superClass:OntClass){
+
+    REPO(Namespaces.GHRDF.uri +"Repo",Provenance.ENTITY),
+    COMMIT(Namespaces.GHRDF.uri +"Commit",Provenance.ACTIVITY),
+    USER(Namespaces.GHRDF.uri +"User",Provenance.PERSON)
 
 }

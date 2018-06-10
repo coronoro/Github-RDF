@@ -1,96 +1,132 @@
 import data.LoadProjects
-import ghproperty.GH
-import org.apache.jena.arq.querybuilder.SelectBuilder
-import org.apache.jena.atlas.logging.LogCtl
 import org.apache.jena.fuseki.embedded.FusekiServer
 import org.apache.jena.query.DatasetFactory
-import org.apache.jena.sparql.core.DatasetGraph
-import org.apache.jena.sparql.core.DatasetGraphFactory
 import writer.RDFModelWriter
 import java.io.File
 import java.io.FileOutputStream
-import org.apache.jena.rdf.model.RDFNode
-import org.apache.jena.query.QuerySolution
-import org.apache.jena.enhanced.BuiltinPersonalities.model
-import org.apache.jena.fuseki.FusekiLogging
 import org.apache.jena.query.QueryExecutionFactory
-import org.apache.jena.query.QueryExecution
 import org.apache.jena.query.QueryFactory
-import org.apache.jena.riot.RDFDataMgr
-import org.apache.jena.system.Txn
-
-
-
-
-
+import org.apache.jena.rdf.model.Model
+import org.apache.jena.rdf.model.ModelFactory
 
 
 val outPath = "C:\\Users\\Coronoro\\Desktop\\gh.ttl"
 //val outPath = "C:\\Users\\Tim Streicher\\gh.ttl"
 
+
+
 fun main(args : Array<String>) {
-    val file = File(outPath)
-    file.createNewFile()
-    val stream = FileOutputStream(file)
+    //val model = load()
+    val model = loadFile()
 
-    val writer = RDFModelWriter(stream)
-
-    LoadProjects.loadProjects(writer, 1)
-
-    /*
-
-    var sparql =    "PREFIX gh:<https://github.com/rdf/#> " +
+    var sparql =    "PREFIX ghrdf:<https://github.com/rdf#> " +
+                    "PREFIX rdfs:<http://www.w3.org/2000/01/rdf-schema#> "+
                     "SELECT ?Entity " +
                     "WHERE {" +
-                    "?Entity  gh:NAME \"grit\""+
+                    "?Entity  rdfs:label \"grit\""+
                     "} ";
 
-    */
 
-    var sparql =    "PREFIX gh:<https://github.com/rdf/#> " +
-                    "PREFIX rdfs:<http://www.w3.org/2000/01/rdf-schema#>"+
-                    "SELECT ?Entity ?l" +
-                    "WHERE { " +
-                    "?Entity  rdfs:member ?l"+
-                    //"FILTER(?bag )"+
-                    "} ";
+    val sparql1 = "PREFIX provo: <https://www.w3.org/ns/prov-o#>" +
+            "PREFIX ghrdf: <https://github.com/rdf#> " +
+            "PREFIX rdfs:<http://www.w3.org/2000/01/rdf-schema#> " +
+            "SELECT ?repo " +
+            "WHERE {" +
+            "?repo  ghrdf:usesLanguage \"HTML\"" +
+            "} "
 
-    val qry = QueryFactory.create(sparql);
-    val qe = QueryExecutionFactory.create(qry, writer.model);
+
+    val sparql2 = "PREFIX provo: <https://www.w3.org/ns/prov-o#>\n" +
+            "PREFIX ghrdf: <https://github.com/rdf#> \n" +
+            "PREFIX rdfs:<http://www.w3.org/2000/01/rdf-schema#> \n" +
+            "\tSELECT ?user \n" +
+            "\t\tWHERE {\n" +
+            "\t\t\t?user a ghrdf:User\n" +
+            "\t\t} \t"
+
+    var sparql3 = "PREFIX provo: <https://www.w3.org/ns/prov-o#>\n" +
+            "PREFIX ghrdf: <https://github.com/rdf#> \n" +
+            "PREFIX rdfs:<http://www.w3.org/2000/01/rdf-schema#> \n" +
+            "PREFIX foaf: <http://xmlns.com/foaf/0.1/> \n" +
+            "\tSELECT ?commit\n" +
+            "\t\tWHERE {\n" +
+            "\t\t\t?commit provo:wasAssociatedWith ?user .\n" +
+            "\t\t\t?user foaf:name \"Dorian\" . \n" +
+            "\t\t} "
+
+    var sparql4 = "PREFIX provo: <https://www.w3.org/ns/prov-o#>\n" +
+            "PREFIX ghrdf: <https://github.com/rdf#> \n" +
+            "PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> \n" +
+            "PREFIX foaf: <http://xmlns.com/foaf/0.1/> \n" +
+            "\tSELECT ?c\n" +
+            "\t\tWHERE {\n" +
+            "\t\t\t?repo rdfs:label \"grit\" .\n" +
+            "\t\t\t?repo ghrdf:commits ?comits .\n" +
+            "\t\t\t?commits rdfs:member ?c . \n" +
+            "\t\t} "
+
+    var sparql5 = "PREFIX provo: <https://www.w3.org/ns/prov-o#>\n" +
+            "PREFIX ghrdf: <https://github.com/rdf#> \n" +
+            "PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> \n" +
+            "PREFIX foaf: <http://xmlns.com/foaf/0.1/> \n" +
+            "PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> \n" +
+            "\tSELECT ?repo \n" +
+            "\t\tWHERE {\n" +
+            "\t\t\t?repo ghrdf:commits ?comits .\n" +
+            "\t\t\t?commits rdfs:member ?c . \n" +
+            "\t\t\t?c provo:endedAtTime ?date FILTER ( ?date < \"2008-08-01T16:32:34Z\"^^xsd:dateTime )\n" +
+            "\t\t} GROUP BY ?repo \t"
+
+    query(model, sparql5)
+}
+
+
+fun query(model: Model, query:String){
+
+    val qry = QueryFactory.create(query);
+    print(qry)
+    val qe = QueryExecutionFactory.create(qry, model);
+
     val rs = qe.execSelect();
 
     while(rs.hasNext()) {
         val sol = rs.nextSolution();
         sol.varNames().forEach {
             val get = sol.get(it)
-            print(get)
+            println(it)
+            println(get)
+
         }
     }
 
     qe.close();
 
+}
 
-    /*
-    QueryExecutionFactory.create(q, writer.model).use({ qexec ->
-        val results = qexec.execSelect()
-        while (results.hasNext()) {
-            val soln = results.nextSolution()
-            val x = soln.get("varName")       // Get a result variable by name.
-            val r = soln.getResource("VarR") // Get a result variable - must be a resource
-            val l = soln.getLiteral("VarL")   // Get a result variable - must be a literal
-        }
-    })
-*/
-/*
+fun startServer(model: Model){
     val ds = DatasetFactory.createTxnMem()
-    ds.addNamedModel("gh", writer.model)
+    ds.addNamedModel("gh", model)
     val server = FusekiServer.create()
             .add("/ds", ds)
-            .
+
             .build()
     server.start()
+}
 
-*/
+fun loadFile():Model{
+    val model = ModelFactory.createDefaultModel()
+    return model.read(outPath)
+}
+
+fun load():Model{
+    val file = File(outPath)
+    file.createNewFile()
+    val stream = FileOutputStream(file)
+
+    val writer = RDFModelWriter(stream,10)
+
+    LoadProjects.loadProjects(writer, 10)
+    return writer.model
 }
 
 
