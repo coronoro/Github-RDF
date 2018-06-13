@@ -10,14 +10,14 @@ import org.apache.jena.rdf.model.Model
 import org.apache.jena.rdf.model.ModelFactory
 
 
-val outPath = "C:\\Users\\Coronoro\\Desktop\\gh.ttl"
-//val outPath = "C:\\Users\\Tim Streicher\\gh.ttl"
+//val outPath = "C:\\Users\\Coronoro\\Desktop\\gh.ttl"
+val outPath = "C:\\Users\\Tim Streicher\\gh2.ttl"
 
 
 
 fun main(args : Array<String>) {
-    //val model = load()
-    val model = loadFile()
+    val model = load()
+    //val model = loadFile()
 
     var sparql =    "PREFIX ghrdf:<https://github.com/rdf#> " +
                     "PREFIX rdfs:<http://www.w3.org/2000/01/rdf-schema#> "+
@@ -123,9 +123,9 @@ fun load():Model{
     file.createNewFile()
     val stream = FileOutputStream(file)
 
-    val writer = RDFModelWriter(stream,10)
+    val writer = RDFModelWriter(stream,50)
 
-    LoadProjects.loadProjects(writer, 10)
+    LoadProjects.loadProjects(writer, 1000)
     return writer.model
 }
 

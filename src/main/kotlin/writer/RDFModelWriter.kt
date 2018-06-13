@@ -61,44 +61,49 @@ class RDFModelWriter(val stream:OutputStream, val commitLimit: Int = -1){
     fun add(repo: GHRepository){
         val resource = model.createIndividual(repo.htmlUrl.toString(), model.getOntClass(OntologyClasses.REPO.uri))
         resource.addProperty(RDFS.label, repo.name)
-
-        //val languageBag = model.createBag()
-        var loc = 0.0
-        for (lang in repo.listLanguages()){
-            loc += lang.value
-            //languageBag.add(lang.key)
-            resource.addProperty(GH.USES_LANGUAGE, lang.key)
-        }
-        //resource.addProperty(GH.USED_LANGUAGES, languageBag)
-
-        resource.addLiteral(GH.LOC, loc.toInt())
-
-        if (repo.createdAt != null){
-            val typedLiteral = model.createTypedLiteral(repo.createdAt, XSDDatatype.XSDdateTime)
-            resource.addProperty(Provenance.GENERATED_AT_TIME, typedLiteral)
-        }
-
-        var created:Date? = null
-
-        val commitBag = model.createBag()
-        resource.addProperty(GH.COMMITS,commitBag)
-        var counter = 0
-        for (commit in repo.listCommits()){
-            if (commitLimit > 0 && counter > commitLimit){
-                break
+        try {
+            var loc = 0.0
+            for (lang in repo.listLanguages()){
+                loc += lang.value
+                resource.addProperty(GH.USES_LANGUAGE, lang.key)
             }
-            //fallback if there is no creationdate for the project
-            if (created == null && commit.parentSHA1s.isEmpty()){
-                created = commit.authoredDate
+
+            resource.addLiteral(GH.LOC, loc.toInt())
+
+            if (repo.createdAt != null){
+                val typedLiteral = model.createTypedLiteral(repo.createdAt, XSDDatatype.XSDdateTime)
+                resource.addProperty(Provenance.GENERATED_AT_TIME, typedLiteral)
             }
-            commitBag.add(this.add(commit,repo))
-            counter++
-        }
 
-        if (created != null){
-            resource.addLiteral(Provenance.STARTED_AT_TIME, created)
-        }
+            var created:Date? = null
 
+            val commitBag = model.createBag()
+            resource.addProperty(GH.COMMITS,commitBag)
+            var counter = 0
+            try {
+                for (commit in repo.listCommits()){
+                    if (commitLimit > 0 && counter > commitLimit){
+                        break
+                    }
+                    //fallback if there is no creationdate for the project
+                    if (created == null && commit.parentSHA1s.isEmpty()){
+                        created = commit.authoredDate
+                    }
+                    commitBag.add(this.add(commit,repo))
+                    counter++
+                }
+            }catch (e: Exception){
+
+            }
+
+
+            if (created != null){
+                resource.addLiteral(Provenance.STARTED_AT_TIME, created)
+            }
+        }catch (e: Exception){
+            println(e.printStackTrace())
+
+        }
 
     }
 
@@ -113,41 +118,54 @@ class RDFModelWriter(val stream:OutputStream, val commitLimit: Int = -1){
 
     fun add(commit:GHCommit, repo:GHRepository): Resource {
         val baseURI = repo.htmlUrl.toString()  + "/commit/"
-        val resource = model.createResource(baseURI+commit.shA1, model.getOntClass(OntologyClasses.COMMIT.uri))
+        val commitURI = baseURI + commit.shA1
+        var resource = model.getResource(commitURI)
+        //if Resource already exists then there's noo need to create it again
+        if (resource == null){
+            resource =  model.createResource(commitURI, model.getOntClass(OntologyClasses.COMMIT.uri))
 
-        resource.addLiteral(GH.LINES_ADDED,commit.linesAdded)
-        resource.addLiteral(GH.LINES_DELETED,commit.linesDeleted)
+            resource.addLiteral(GH.LINES_ADDED,commit.linesAdded)
+            resource.addLiteral(GH.LINES_DELETED,commit.linesDeleted)
 
 
-        for (parentSHA1 in commit.parentSHA1s) {
-            resource.addProperty(GH.PREVIOUS_COMMIT, baseURI + parentSHA1)
-        }
-
+            for (parent in commit.parents) {
+                //val res = add(parent, repo)
+                val res = baseURI + parent.shA1
+                resource.addProperty(GH.PREVIOUS_COMMIT, res)
+            }
 
             //TODO message
-        //resource.addProperty(GH.COMMIT_MESSAGE, commit.)
-        val typedAuthoredDate = model.createTypedLiteral(commit.authoredDate, XSDDatatype.XSDdateTime)
-        resource.addLiteral(Provenance.STARTED_AT_TIME , typedAuthoredDate)
+            //resource.addProperty(GH.COMMIT_MESSAGE, commit.)
+            val typedAuthoredDate = model.createTypedLiteral(commit.authoredDate, XSDDatatype.XSDdateTime)
+            resource.addLiteral(Provenance.STARTED_AT_TIME , typedAuthoredDate)
 
-        val myCal = GregorianCalendar()
-        myCal.time = commit.commitDate
+            val myCal = GregorianCalendar()
+            myCal.time = commit.commitDate
 
-        //val typedCommitDate = model.createTypedLiteral(commit.commitDate, XSDDatatype.XSDdateTime)
-        resource.addLiteral(Provenance.ENDED_AT_TIME , XSDDateTime(myCal))
+            //val typedCommitDate = model.createTypedLiteral(commit.commitDate, XSDDatatype.XSDdateTime)
+            resource.addLiteral(Provenance.ENDED_AT_TIME , XSDDateTime(myCal))
 
-        if (commit.author != null){
-            val author = this.add(commit.author)
-            resource.addProperty(Provenance.WAS_ASSOCIATED_WITH, author)
+            if (commit.author != null){
+                val author = this.add(commit.author)
+                resource.addProperty(Provenance.WAS_ASSOCIATED_WITH, author)
+            }
         }
+
         return resource
     }
 
 
     fun add(user:GHUser):Resource{
         val userURI = user.htmlUrl.toString()
+        if (user.name == null){
 
+        }
         var resource = model.getIndividual(userURI) ?: model.createIndividual(userURI,model.getOntClass(OntologyClasses.USER.uri))
-        resource.addProperty(FOAF.name, user.name)
+        var name = user.name
+        if (name == null){
+            name = userURI.substring(userURI.lastIndexOf("/") .. userURI.length)
+        }
+        resource.addProperty(FOAF.name, name)
         if (user.email != null){
             resource.addProperty(FOAF.mbox, user.email)
         }
