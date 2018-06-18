@@ -11,6 +11,7 @@ import org.apache.jena.rdf.model.ModelFactory
 
 
 val outPath = "C:\\Users\\Coronoro\\Desktop\\gh2.ttl"
+val loadPath = "C:\\Users\\Coronoro\\Desktop\\"
 //val outPath = "C:\\Users\\Tim Streicher\\gh2.ttl"
 
 
@@ -147,9 +148,9 @@ fun load():Model{
     file.createNewFile()
     val stream = FileOutputStream(file)
 
-    val writer = RDFModelWriter(stream,10)
-
-    LoadProjects.loadProjects(writer, 10)
+    val writer = RDFModelWriter(stream,-1)
+    LoadProjects.limit()
+    LoadProjects.loadProjects(writer, 100)
     return writer.model
 }
 

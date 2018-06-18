@@ -59,6 +59,7 @@ class RDFModelWriter(val stream:OutputStream, val commitLimit: Int = -1){
 
 
     fun add(repo: GHRepository){
+        println("added "+ repo.htmlUrl.toString())
         val resource = model.createIndividual(repo.htmlUrl.toString(), model.getOntClass(OntologyClasses.REPO.uri))
         resource.addProperty(RDFS.label, repo.name)
         try {
@@ -122,6 +123,7 @@ class RDFModelWriter(val stream:OutputStream, val commitLimit: Int = -1){
     fun add(commit:GHCommit, repo:GHRepository): Resource {
         val baseURI = repo.htmlUrl.toString()  + "/commit/"
         val commitURI = baseURI + commit.shA1
+        println("added "+ commitURI)
 
             val resource =  model.createResource(commitURI, model.getOntClass(OntologyClasses.COMMIT.uri))
 
@@ -155,6 +157,7 @@ class RDFModelWriter(val stream:OutputStream, val commitLimit: Int = -1){
 
     fun add(user:GHUser):Resource{
         val userURI = user.htmlUrl.toString()
+        println("added "+ userURI)
         if (user.name == null){
 
         }
