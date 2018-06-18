@@ -10,8 +10,8 @@ import org.apache.jena.rdf.model.Model
 import org.apache.jena.rdf.model.ModelFactory
 
 
-//val outPath = "C:\\Users\\Coronoro\\Desktop\\gh.ttl"
-val outPath = "C:\\Users\\Tim Streicher\\gh2.ttl"
+val outPath = "C:\\Users\\Coronoro\\Desktop\\gh2.ttl"
+//val outPath = "C:\\Users\\Tim Streicher\\gh2.ttl"
 
 
 
@@ -61,7 +61,7 @@ fun main(args : Array<String>) {
             "\tSELECT ?c\n" +
             "\t\tWHERE {\n" +
             "\t\t\t?repo rdfs:label \"grit\" .\n" +
-            "\t\t\t?repo ghrdf:commits ?comits .\n" +
+            "\t\t\t?repo ghrdf:commits ?commits .\n" +
             "\t\t\t?commits rdfs:member ?c . \n" +
             "\t\t} "
 
@@ -70,14 +70,27 @@ fun main(args : Array<String>) {
             "PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> \n" +
             "PREFIX foaf: <http://xmlns.com/foaf/0.1/> \n" +
             "PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> \n" +
-            "\tSELECT ?repo \n" +
+            "\tSELECT ?repo (COUNT(?c) AS ?cc)  \n" +
             "\t\tWHERE {\n" +
-            "\t\t\t?repo ghrdf:commits ?comits .\n" +
+            "\t\t\t?repo ghrdf:commits ?commits .\n" +
             "\t\t\t?commits rdfs:member ?c . \n" +
-            "\t\t\t?c provo:endedAtTime ?date FILTER ( ?date < \"2008-08-01T16:32:34Z\"^^xsd:dateTime )\n" +
-            "\t\t} GROUP BY ?repo \t"
+            "\t\t\t?c provo:endedAtTime ?date FILTER ( ?date < \"2008-08-01T16:32:34Z\"^^xsd:dateTime ) . \n" +
+            "\t\t} GROUP BY ?repo\t"
 
-    query(model, sparql5)
+    var sparql6 = "PREFIX provo: <https://www.w3.org/ns/prov-o#>\n" +
+            "PREFIX ghrdf: <https://github.com/rdf#> \n" +
+            "PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> \n" +
+            "PREFIX foaf: <http://xmlns.com/foaf/0.1/> \n" +
+            "PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> \n" +
+            "SELECT ?repo (COUNT(?c) AS ?cc)\n" +
+            "WHERE {\n" +
+            "\t?repo ghrdf:commits ?commits ;\n" +
+            "\t\tghrdf:usesLanguage \"Java\" .\n" +
+            "\t?commits rdfs:member ?c . \n" +
+            "\t?c provo:endedAtTime ?date FILTER ( ?date < \"2008-08-01T16:32:34Z\"^^xsd:dateTime ) . \t\t\n" +
+            "}GROUP BY ?repo HAVING (?cc > 5)"
+
+    query(model, sparql6)
 }
 
 
@@ -89,14 +102,25 @@ fun query(model: Model, query:String){
 
     val rs = qe.execSelect();
 
+    var head = true
     while(rs.hasNext()) {
         val sol = rs.nextSolution();
+
+        if (head){
+            sol.varNames().forEach {
+                print(String.format("%-60s",it))
+                print("\t")
+            }
+            head = false
+            println()
+        }
         sol.varNames().forEach {
             val get = sol.get(it)
-            println(it)
-            println(get)
+            print(String.format("%-60s",get))
+            print("\t")
 
         }
+        println()
     }
 
     qe.close();
@@ -123,9 +147,9 @@ fun load():Model{
     file.createNewFile()
     val stream = FileOutputStream(file)
 
-    val writer = RDFModelWriter(stream,50)
+    val writer = RDFModelWriter(stream,10)
 
-    LoadProjects.loadProjects(writer, 1000)
+    LoadProjects.loadProjects(writer, 10)
     return writer.model
 }
 

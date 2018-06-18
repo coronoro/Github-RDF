@@ -70,9 +70,11 @@ class RDFModelWriter(val stream:OutputStream, val commitLimit: Int = -1){
 
             resource.addLiteral(GH.LOC, loc.toInt())
 
+
+            val cal = GregorianCalendar()
             if (repo.createdAt != null){
-                val typedLiteral = model.createTypedLiteral(repo.createdAt, XSDDatatype.XSDdateTime)
-                resource.addProperty(Provenance.GENERATED_AT_TIME, typedLiteral)
+                cal.time = repo.createdAt
+                resource.addLiteral(Provenance.GENERATED_AT_TIME, XSDDateTime(cal))
             }
 
             var created:Date? = null
@@ -98,7 +100,8 @@ class RDFModelWriter(val stream:OutputStream, val commitLimit: Int = -1){
 
 
             if (created != null){
-                resource.addLiteral(Provenance.STARTED_AT_TIME, created)
+                cal.time = created
+                resource.addLiteral(Provenance.STARTED_AT_TIME,  XSDDateTime(cal))
             }
         }catch (e: Exception){
             println(e.printStackTrace())
@@ -119,10 +122,8 @@ class RDFModelWriter(val stream:OutputStream, val commitLimit: Int = -1){
     fun add(commit:GHCommit, repo:GHRepository): Resource {
         val baseURI = repo.htmlUrl.toString()  + "/commit/"
         val commitURI = baseURI + commit.shA1
-        var resource = model.getResource(commitURI)
-        //if Resource already exists then there's noo need to create it again
-        if (resource == null){
-            resource =  model.createResource(commitURI, model.getOntClass(OntologyClasses.COMMIT.uri))
+
+            val resource =  model.createResource(commitURI, model.getOntClass(OntologyClasses.COMMIT.uri))
 
             resource.addLiteral(GH.LINES_ADDED,commit.linesAdded)
             resource.addLiteral(GH.LINES_DELETED,commit.linesDeleted)
@@ -133,23 +134,20 @@ class RDFModelWriter(val stream:OutputStream, val commitLimit: Int = -1){
                 val res = baseURI + parent.shA1
                 resource.addProperty(GH.PREVIOUS_COMMIT, res)
             }
-
             //TODO message
-            //resource.addProperty(GH.COMMIT_MESSAGE, commit.)
-            val typedAuthoredDate = model.createTypedLiteral(commit.authoredDate, XSDDatatype.XSDdateTime)
-            resource.addLiteral(Provenance.STARTED_AT_TIME , typedAuthoredDate)
 
-            val myCal = GregorianCalendar()
-            myCal.time = commit.commitDate
+            val cal = GregorianCalendar()
+            cal.time = commit.authoredDate
+            resource.addLiteral(Provenance.STARTED_AT_TIME , XSDDateTime(cal))
 
-            //val typedCommitDate = model.createTypedLiteral(commit.commitDate, XSDDatatype.XSDdateTime)
-            resource.addLiteral(Provenance.ENDED_AT_TIME , XSDDateTime(myCal))
+            cal.time = commit.commitDate
+            resource.addLiteral(Provenance.ENDED_AT_TIME , XSDDateTime(cal))
 
             if (commit.author != null){
                 val author = this.add(commit.author)
                 resource.addProperty(Provenance.WAS_ASSOCIATED_WITH, author)
             }
-        }
+
 
         return resource
     }
@@ -160,7 +158,7 @@ class RDFModelWriter(val stream:OutputStream, val commitLimit: Int = -1){
         if (user.name == null){
 
         }
-        var resource = model.getIndividual(userURI) ?: model.createIndividual(userURI,model.getOntClass(OntologyClasses.USER.uri))
+        var resource = model.createResource(userURI,model.getOntClass(OntologyClasses.USER.uri))
         var name = user.name
         if (name == null){
             name = userURI.substring(userURI.lastIndexOf("/") .. userURI.length)
